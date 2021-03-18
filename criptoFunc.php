@@ -1,4 +1,6 @@
 <?php
+include_once "config.php";
+
 function strToHex($string){
     $hex = '';
     for ($i=0; $i<strlen($string); $i++){
@@ -42,14 +44,18 @@ function hashPass($password)
 
 function passDecrypt($list, $oneMonth)
 {
-    $json = json_decode(file_get_contents('https://worldtimeapi.org/api/timezone/Europe/Rome'));
-    if ($oneMonth) {
-        $lastCharIndex = 7;
+    if (isLocal()) {
+        $dateStr = "14 12 1972";
     } else {
-        $lastCharIndex = 16;
+        $json = json_decode(file_get_contents('https://worldtimeapi.org/api/timezone/Europe/Rome'));
+        if ($oneMonth) {
+            $lastCharIndex = 7;
+        } else {
+            $lastCharIndex = 16;
+        }
+        $dateStr = substr($json->{'datetime'},0,$lastCharIndex);
     }
-    $dateStr = substr($json->{'datetime'},0,$lastCharIndex);
-    
+        
     $secret = 'f775aaf9cfab2cd30fd0d0ad28c5c460';
     $hmac = hash_hmac('sha256',$dateStr,$secret);
 

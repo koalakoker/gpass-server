@@ -2,6 +2,8 @@
 include_once "config.php";
 include_once "passDB_cript.php";
 include_once "criptoFunc.php";
+include_once "getVars.php";
+include_once "checkAdminRight.php";
 
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: DELETE, PUT, POST, OPTIONS");
@@ -21,23 +23,25 @@ if ($logFile) {
   fwrite($logFile, "get chipher_password:"    . $_GET['chipher_password'] . "\n");
 }
 
-if (isset($_SESSION['decryptPass'])) {
-  $decryptPass = $_SESSION['decryptPass'];
-} else {
-  if (isset($_GET["chipher_password"])) {
-    $decryptPass = $_GET["chipher_password"];
-  } else {
-    if ($logFile) {
+if (($decryptPass = getDecryptPass()) == "") {
+  if ($logFile) {
       fwrite($logFile, "Missing decrypt key!");
+    }
+  die();
+};
+
+$level = getLevel();
+$allUsers = -1;
+
+if (isset($_GET["fromuser"])) {
+  if (($userid = getUserId()) == NULL) {
+    if ($logFile) {
+      fwrite($logFile, "User id required!");
     }
     die();
   }
-}
-
-if (isset($_GET["fromuser"])) {
-  $userid = $_GET["fromuser"];
 } else {
-  // Admin operation
+  $userid = $allUsers;
 }
 
 $Server   = deChipher($Server,  $decryptPass);
@@ -84,14 +88,30 @@ if ($input)
     $set.=($values[$i]===null?'NULL':'"'.$values[$i].'"');
   }
 }
+
+$operation = new Operation();
+$operation->method = $method;
+$operation->table = $table;
+$operation->userid = $userid;
+$operation->allusers = $allusers;
+$operation->level = $level;
+$haveRight = $operation->checkAdminRightForOperation();
+if (!$haveRight) {
+  {
+      if ($logFile) {
+        fwrite($logFile, "Require admin rights");
+      }
+      die();
+    }
+}
  
 // create SQL based on HTTP method
 switch ($method) {
   case 'GET':
-    if (isset($userid)) {
-      $sql = "select * from `$table` WHERE userid=" . $userid;
+    if ($userid==$allUsers) {
+      $sql = "select * from `$table`".( $key ? " WHERE id=$key" : '');
     } else {
-      $sql = "select * from `$table`".($key?" WHERE id=$key":'');
+      $sql = "select * from `$table` WHERE userid=" . $userid . ( $key ? " AND id=$key" : '');
     }
     break;
   case 'PUT':
