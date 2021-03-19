@@ -5,7 +5,7 @@ function isConfigForTesting() {
   return true;
 }
 
-// Skip the time token cript if tru
+// Skip the time token cript if true
 function isLocal() {
   return true;
 }
