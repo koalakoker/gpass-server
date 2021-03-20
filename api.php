@@ -1,9 +1,9 @@
 <?php
-include_once "config.php";
 include_once "passDB_cript.php";
 include_once "criptoFunc.php";
 include_once "getVars.php";
-include_once "checkAdminRight.php";
+include_once "operation.php";
+include_once "debugLog.php";
 
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: DELETE, PUT, POST, OPTIONS");
@@ -12,21 +12,11 @@ header("Content-Type: application/json; charset=UTF-8");
 
 session_start();
 
-if (isConfigForTesting()) {
-  $logFile = fopen("../log/api.txt", "a");
-}
-
-if ($logFile) {
-  fwrite($logFile, "-----------------------------------------------------------------------------\n");
-  fwrite($logFile, date("Y-m-d H:i:s") . "\n");
-  fwrite($logFile, "session decryptPass:". $_SESSION['decryptPass'] . "\n");
-  fwrite($logFile, "get chipher_password:"    . $_GET['chipher_password'] . "\n");
-}
+$dbg = new DebugLog("../log/api.txt", "a");
 
 if (($decryptPass = getDecryptPass()) == "") {
-  if ($logFile) {
-      fwrite($logFile, "Missing decrypt key!");
-    }
+  $dbg->print("Missing decrypt key!");
+  $dbg->close();
   die();
 };
 
@@ -35,9 +25,8 @@ $allUsers = -1;
 
 if (isset($_GET["fromuser"])) {
   if (($userid = getUserId()) == NULL) {
-    if ($logFile) {
-      fwrite($logFile, "User id required!");
-    }
+    $dbg->print("User id required!");
+    $dbg->close();
     die();
   }
 } else {
@@ -53,9 +42,8 @@ if ($Server == "")
 {
   session_unset();
   session_destroy();
-  if ($logFile) {
-      fwrite($logFile, "Wrong decrypt key. Access denied!");
-    }
+  $dbg->print("Wrong decrypt key. Access denied!");
+  $dbg->close();
   die();
 }
 
@@ -89,20 +77,19 @@ if ($input)
   }
 }
 
-$operation = new Operation();
-$operation->method = $method;
+$operation = new Operation($dbg);
+$operation->operation = $method;
 $operation->table = $table;
+$operation->input = $input;
 $operation->userid = $userid;
 $operation->allusers = $allusers;
 $operation->level = $level;
+
 $haveRight = $operation->checkAdminRightForOperation();
 if (!$haveRight) {
-  {
-      if ($logFile) {
-        fwrite($logFile, "Require admin rights");
-      }
-      die();
-    }
+  $dbg->print("Require admin rights");
+  $dbg->close();
+  die();
 }
  
 // create SQL based on HTTP method
@@ -129,18 +116,18 @@ switch ($method) {
  
 if ($sql) {
 
-  if ($logFile) {
-    fwrite($logFile, "sql:"    . $sql . "\n");
-  }
-
+  $dbg->print("sql: " . $sql);
+  
   // excecute SQL statement
   $result = mysqli_query($link,$sql);
 
-  // die if SQL statement failed
+  // Close session if SQL statement failed
   if (!$result) {
     session_unset();
     session_destroy();
-    die("MySQL error");
+    $dbg->print("MySQL error");
+    $dbg->close();
+    die();
   }
   
   // print results, insert id or affected row count
@@ -164,16 +151,12 @@ if ($sql) {
   }
   echo($answer);
 
-  if ($logFile) {
-    fwrite($logFile, "answer:"    . $answer . "\n");
-  } 
+  $dbg->print("answer: ". $answer); 
   
   // close mysql connection
   mysqli_close($link);
 }
 
-if ($logFile) {
-  fwrite($logFile, "#############################################################################\n");
-  fclose($logFile);
-}
+$dbg->close();
+
 ?>

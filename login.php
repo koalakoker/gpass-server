@@ -1,34 +1,28 @@
 <?php
-include_once "config.php";
 include_once "passDB_cript.php";
 include_once "criptoFunc.php";
+include_once "debugLog.php";
 
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json; charset=UTF-8");
 
 session_start();
 
-if (isConfigForTesting()) {
-  $logFile = fopen("../log/login.txt", "a");
-}
-
-if ($logFile) {
-  fwrite($logFile, "\n\n" . date("Y-m-d H:i:s") . "\n");
-}
+$dbg = new DebugLog("../log/login.txt", "a");
 
 if (isset($_GET["logout"]))
 {
   session_unset();
   session_destroy();
+  $dbg->print("Session destroyed");
+  $dbg->close();
   die ('{ "error": "Session destroyed"}');
 }
 
 if (!isset($_GET["chipher_password"]))
 {
-  if ($logFile) {
-    fwrite($logFile, "Missing chipher_password!" . "\n");
-    fclose($logFile);
-  }
+  $dbg->print("Missing chipher_password!");
+  $dbg->close();
   die('{
     "error": "Missing chipher_password!",
     "logged"      : false
@@ -37,10 +31,8 @@ if (!isset($_GET["chipher_password"]))
 
 if (!isset($_GET["user_name"]))
 {
-  if ($logFile) {
-    fwrite($logFile, "Missing user_name!" . "\n");
-    fclose($logFile);
-  }
+  $dbg->print("Missing user_name!");
+  $dbg->close();
   die('{
     "error": "Missing user_name!",
     "logged"      : false
@@ -49,10 +41,8 @@ if (!isset($_GET["user_name"]))
 
 if (!isset($_GET["user_password"]))
 {
-  if ($logFile) {
-    fwrite($logFile, "Missing user_password!" . "\n");
-    fclose($logFile);
-  }
+  $dbg->print("Missing user_password!");
+  $dbg->close();
   die('{
     "error": "Missing user_password!",
     "logged"      : false
@@ -84,11 +74,9 @@ else {
   $prevSessionUserPass ='';
 }
 
-if ($logFile) {
-  fwrite($logFile, "*** Received ***\n");
-  fwrite($logFile, "UserName = "     . $user_name . "\n");
-  fwrite($logFile, "UserPassword = " . $user_password . "\n");
-}
+$dbg->print("*** Received ***");
+$dbg->print("UserName = "     . $user_name);
+$dbg->print("UserPassword = " . $user_password);
 
 $inputList = array('chipher_password' => $chipher_password,'user_name' => $user_name,'user_password' => $user_password );
 $outputList = passDecrypt($inputList, false);
@@ -97,19 +85,15 @@ $decryptPass = $outputList['chipher_password'];
 $user_name = $outputList['user_name'];
 $user_password = $outputList['user_password'];
 
-if ($logFile) {
-  fwrite($logFile, "*** Decoded ***\n");
-  fwrite($logFile, "UserName = "     . $user_name . "\n");
-  // fwrite($logFile, "UserPassword = " . $user_password . "\n");
-}
+$dbg->print("*** Decoded ***");
+$dbg->print("UserName = "     . $user_name);
+$dbg->print("UserPassword = " . $user_password);
 
 $decryptPass = hashPass($decryptPass);
 $user_password = hashPass($user_password);
 
-if ($logFile) {
-  fwrite($logFile, "*** Hash ***\n");
-  fwrite($logFile, "UserPassword = " . $user_password . "\n");
-}
+$dbg->print("*** Hash ***");
+$dbg->print("UserPassword = " . $user_password);
 
 $_SESSION['decryptPass'] = $decryptPass;
 $_SESSION['userName'] = $user_name;
@@ -124,6 +108,8 @@ if ($Server == "")
 {
   session_unset();
   session_destroy();
+  $dbg->print("Wrong decrypt key. Access denied!");
+  $dbg->close();
   die('{
       "error"  : "Wrong decrypt key. Access denied!",
       "logged" : false
@@ -158,8 +144,7 @@ $answer = '{' .
 }'; 
 echo($answer);
 
-if ($logFile) {
-  fwrite($logFile, "Answer = " . $answer . "\n");
-  fclose($logFile);
-}
+$dbg->print("Answer = " . $answer);
+$dbg->close();
+
 ?>

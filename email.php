@@ -1,28 +1,19 @@
 <?php
-
-include_once "config.php";
 include_once "passDB_cript.php";
 include_once "criptoFunc.php";
+include_once "debugLog.php";
+include_once "printable.php";
 
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json; charset=UTF-8");
 
-if (isConfigForTesting()) {
-  $logFile = fopen("../log/email.txt", "a");
-  $emailFile = fopen("../log/email.html", "w");
-}
-
-if ($logFile) {
-  fwrite($logFile, "-----------------------------------------------------------------------------\n");
-  fwrite($logFile, date("Y-m-d H:i:s") . "\n");
-}
+$dbg = new DebugLog("../log/email.txt", "a");
+$emailPrint = new Printable("../log/email.html", "w");
 
 if (!isset($_GET["chipher_password"]))
 {
-  if ($logFile) {
-    fwrite($logFile, "Missing chipher_password!" . "\n");
-    fclose($logFile);
-  }
+  $dbg->print("Missing chipher_password!");
+  $dbg->close();
   die('{
     "error": "Missing chipher_password!",
     "logged"      : false
@@ -31,10 +22,8 @@ if (!isset($_GET["chipher_password"]))
 
 if (!isset($_GET["user_name"]))
 {
-  if ($logFile) {
-    fwrite($logFile, "Missing user_name!" . "\n");
-    fclose($logFile);
-  }
+  $dbg->print("Missing user_name!");
+  $dbg->close();
   die('{
     "error": "Missing user_name!",
     "logged"      : false
@@ -43,10 +32,8 @@ if (!isset($_GET["user_name"]))
 
 if (!isset($_GET["user_password"]))
 {
-  if ($logFile) {
-    fwrite($logFile, "Missing user_password!" . "\n");
-    fclose($logFile);
-  }
+  $dbg->print("Missing user_password!");
+  $dbg->close();
   die('{
     "error": "Missing user_password!",
     "logged"      : false
@@ -58,13 +45,11 @@ $user_name = $_GET['user_name'];
 $user_password = $_GET['user_password'];
 $email = $_GET['email'];
 
-if ($logFile) {
-  fwrite($logFile, "*** Received ***\n");
-  fwrite($logFile, "UserName = "     . $user_name . "\n");
-  fwrite($logFile, "UserPassword = " . $user_password . "\n");
-  fwrite($logFile, "Chipher Password = " . $chipher_password . "\n");
-  fwrite($logFile, "Email = " . $email . "\n");
-}
+$dbg->print("*** Received ***");
+$dbg->print("UserName = "     . $user_name);
+$dbg->print("UserPassword = " . $user_password);
+$dbg->print("Chipher Password = " . $chipher_password);
+$dbg->print("Email = " . $email);
 
 $inputList = array(
   'chipher_password' => $chipher_password,
@@ -73,13 +58,11 @@ $inputList = array(
   'email' => $email );
 $outputList = passDecrypt($inputList, true);
 
-if ($logFile) {
-  fwrite($logFile, "*** Decoded ***\n");
-  fwrite($logFile, "UserName = "     . $outputList['user_name'] . "\n");
-  fwrite($logFile, "UserPassword = " . $outputList['user_password'] . "\n");
-  fwrite($logFile, "Chipher Password = " . $outputList['chipher_password'] . "\n");
-  fwrite($logFile, "Email = " . $outputList['email'] . "\n");
-}
+$dbg->print("*** Decoded ***");
+$dbg->print("UserName = "     . $outputList['user_name']);
+$dbg->print("UserPassword = " . $outputList['user_password']);
+$dbg->print("Chipher Password = " . $outputList['chipher_password']);
+$dbg->print("Email = " . $outputList['email']);
 
 $answer = '{
   "txt"         : "Login done.",
@@ -119,15 +102,10 @@ $headers[] = 'From: GPass Admin <koala@koalakoker.com>';
 // Mail it
 mail($to, $subject, $message, implode("\r\n", $headers));
 
-if ($emailFile) {
-  fwrite($emailFile, $message);
-  fclose($emailFile);
-}
+$emailPrint->print($message);
+$emailPrint->close();
 
-if ($logFile) {
-  fwrite($logFile, "Answer = " . $answer . "\n");
-  fwrite($logFile, "#############################################################################\n");
-  fclose($logFile);
-}
+$dbg->print("Answer = " . $answer);
+$dbg->close();
 
 ?>
