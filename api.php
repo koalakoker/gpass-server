@@ -85,12 +85,7 @@ $operation->userid = $userid;
 $operation->allusers = $allusers;
 $operation->level = $level;
 
-$haveRight = $operation->checkAdminRightForOperation();
-if (!$haveRight) {
-  $dbg->print("Require admin rights");
-  $dbg->close();
-  die();
-}
+$operation->checkAdminRightForOperation();
  
 // create SQL based on HTTP method
 switch ($method) {

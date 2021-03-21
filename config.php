@@ -3,7 +3,7 @@
 // Enable log files if true
 function isLogEnabled()
 {
-  return false;
+  return true;
 }
 
 // False to use session, True to get params from url 
