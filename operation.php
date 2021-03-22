@@ -55,10 +55,10 @@ class Operation
     if ($this->level >= $this->minLevel) 
     {
       $this->dbg->print("  User has rights for the operation");
+      return true;
     } else {
       $this->dbg->print("  User doesn't has rights for the operation");
-      $this->dbg->close();
-      die();
+      return false;
     }
   }
 

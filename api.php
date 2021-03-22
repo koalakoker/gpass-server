@@ -10,14 +10,21 @@ header("Access-Control-Allow-Methods: DELETE, PUT, POST, OPTIONS");
 header("Access-Control-Allow-Headers: x-requested-with, Content-Type, origin, authorization, accept, client-security-token");
 header("Content-Type: application/json; charset=UTF-8");
 
+function noAnswer($dbg) {
+  $answer ='{}';
+  echo ($answer);
+  $dbg->print("answer: " . $answer);
+  $dbg->close();
+  die();
+}
+
 session_start();
 
 $dbg = new DebugLog("../log/api.txt", "a");
 
 if (($decryptPass = getDecryptPass()) == "") {
   $dbg->print("Missing decrypt key!");
-  $dbg->close();
-  die();
+  noAnswer($dbg);
 };
 
 $level = getLevel();
@@ -26,8 +33,7 @@ $allUsers = -1;
 if (isset($_GET["fromuser"])) {
   if (($userid = getUserId()) == NULL) {
     $dbg->print("User id required!");
-    $dbg->close();
-    die();
+    noAnswer($dbg);
   }
 } else {
   $userid = $allUsers;
@@ -43,8 +49,7 @@ if ($Server == "")
   session_unset();
   session_destroy();
   $dbg->print("Wrong decrypt key. Access denied!");
-  $dbg->close();
-  die();
+  noAnswer($dbg);
 }
 
 // get the HTTP method, path and body of the request
@@ -85,7 +90,9 @@ $operation->userid = $userid;
 $operation->allusers = $allusers;
 $operation->level = $level;
 
-$operation->checkAdminRightForOperation();
+if (!$operation->checkAdminRightForOperation()) { 
+  noAnswer($dbg);
+};
  
 // create SQL based on HTTP method
 switch ($method) {
@@ -121,8 +128,7 @@ if ($sql) {
     session_unset();
     session_destroy();
     $dbg->print("MySQL error");
-    $dbg->close();
-    die();
+    noAnswer($dbg);
   }
   
   // print results, insert id or affected row count
@@ -150,6 +156,8 @@ if ($sql) {
   
   // close mysql connection
   mysqli_close($link);
+} else {
+  noAnswer($dbg);
 }
 
 $dbg->close();
