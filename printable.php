@@ -14,9 +14,16 @@ class Printable
     }
   }
 
-  public function print($message) {
+  public function log($message) {
     if ($this->logFile) {
       fwrite($this->logFile, $message . "\n");
+    }
+  }
+
+  public function logArray($array) {
+    $this->log("Array:");
+    foreach ($array as $key => $value) {
+      $this->log($key . "->" . $value);
     }
   }
 

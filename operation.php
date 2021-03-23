@@ -43,21 +43,21 @@ class Operation
   }
   
   public function checkAdminRightForOperation() {
-    $this->dbg->print("  Check operation");
+    $this->dbg->log("  Check operation");
     
     $this->minLevel = 0;
     $this->checkTableUsersAccess();
     $this->checkInviteUserForOperation();
     
-    $this->dbg->print("  User level:"   . $this->level);
-    $this->dbg->print("  Rights level:" . $this->minLevel);
+    $this->dbg->log("  User level:"   . $this->level);
+    $this->dbg->log("  Rights level:" . $this->minLevel);
 
     if ($this->level >= $this->minLevel) 
     {
-      $this->dbg->print("  User has rights for the operation");
+      $this->dbg->log("  User has rights for the operation");
       return true;
     } else {
-      $this->dbg->print("  User doesn't has rights for the operation");
+      $this->dbg->log("  User doesn't has rights for the operation");
       return false;
     }
   }

@@ -35,7 +35,7 @@ function sendEmail($userEmail, $user_name, $userPassword, $masterPassword, $retu
   // Mail it
   mail($userEmail, $subject, $message, implode("\r\n", $headers));
 
-  $emailPrint->print($message);
+  $emailPrint->log($message);
   $emailPrint->close();
 }
 

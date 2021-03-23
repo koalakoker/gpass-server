@@ -13,7 +13,7 @@ header("Content-Type: application/json; charset=UTF-8");
 function noAnswer($dbg) {
   $answer ='{}';
   echo ($answer);
-  $dbg->print("answer: " . $answer);
+  $dbg->log("answer: " . $answer);
   $dbg->close();
   die();
 }
@@ -23,7 +23,7 @@ session_start();
 $dbg = new DebugLog("../log/api.txt", "a");
 
 if (($decryptPass = getDecryptPass()) == "") {
-  $dbg->print("Missing decrypt key!");
+  $dbg->log("Missing decrypt key!");
   noAnswer($dbg);
 };
 
@@ -32,7 +32,7 @@ $allUsers = -1;
 
 if (isset($_GET["fromuser"])) {
   if (($userid = getUserId()) == NULL) {
-    $dbg->print("User id required!");
+    $dbg->log("User id required!");
     noAnswer($dbg);
   }
 } else {
@@ -48,7 +48,7 @@ if ($Server == "")
 {
   session_unset();
   session_destroy();
-  $dbg->print("Wrong decrypt key. Access denied!");
+  $dbg->log("Wrong decrypt key. Access denied!");
   noAnswer($dbg);
 }
 
@@ -118,7 +118,7 @@ switch ($method) {
  
 if ($sql) {
 
-  $dbg->print("sql: " . $sql);
+  $dbg->log("sql: " . $sql);
   
   // excecute SQL statement
   $result = mysqli_query($link,$sql);
@@ -127,11 +127,11 @@ if ($sql) {
   if (!$result) {
     session_unset();
     session_destroy();
-    $dbg->print("MySQL error");
+    $dbg->log("MySQL error");
     noAnswer($dbg);
   }
   
-  // print results, insert id or affected row count
+  // log results, insert id or affected row count
   $answer = "";
 
   if ($method == 'GET') {
@@ -152,7 +152,7 @@ if ($sql) {
   }
   echo($answer);
 
-  $dbg->print("answer: ". $answer); 
+  $dbg->log("answer: ". $answer); 
   
   // close mysql connection
   mysqli_close($link);

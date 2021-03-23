@@ -14,14 +14,14 @@ if (isset($_GET["logout"]))
 {
   session_unset();
   session_destroy();
-  $dbg->print("Session destroyed");
+  $dbg->log("Session destroyed");
   $dbg->close();
   die ('{ "error": "Session destroyed"}');
 }
 
 if (!isset($_GET["chipher_password"]))
 {
-  $dbg->print("Missing chipher_password!");
+  $dbg->log("Missing chipher_password!");
   $dbg->close();
   die('{
     "error": "Missing chipher_password!",
@@ -31,7 +31,7 @@ if (!isset($_GET["chipher_password"]))
 
 if (!isset($_GET["user_name"]))
 {
-  $dbg->print("Missing user_name!");
+  $dbg->log("Missing user_name!");
   $dbg->close();
   die('{
     "error": "Missing user_name!",
@@ -41,7 +41,7 @@ if (!isset($_GET["user_name"]))
 
 if (!isset($_GET["user_password"]))
 {
-  $dbg->print("Missing user_password!");
+  $dbg->log("Missing user_password!");
   $dbg->close();
   die('{
     "error": "Missing user_password!",
@@ -74,9 +74,9 @@ else {
   $prevSessionUserPass ='';
 }
 
-$dbg->print("*** Received ***");
-$dbg->print("UserName = "     . $user_name);
-$dbg->print("UserPassword = " . $user_password);
+$dbg->log("*** Received ***");
+$dbg->log("UserName = "     . $user_name);
+$dbg->log("UserPassword = " . $user_password);
 
 $inputList = array('chipher_password' => $chipher_password,'user_name' => $user_name,'user_password' => $user_password );
 $outputList = passDecrypt($inputList, false);
@@ -85,15 +85,15 @@ $decryptPass = $outputList['chipher_password'];
 $user_name = $outputList['user_name'];
 $user_password = $outputList['user_password'];
 
-$dbg->print("*** Decoded ***");
-$dbg->print("UserName = "     . $user_name);
-$dbg->print("UserPassword = " . $user_password);
+$dbg->log("*** Decoded ***");
+$dbg->log("UserName = "     . $user_name);
+$dbg->log("UserPassword = " . $user_password);
 
 $decryptPass = hashPass($decryptPass);
 $user_password = hashPass($user_password);
 
-$dbg->print("*** Hash ***");
-$dbg->print("UserPassword = " . $user_password);
+$dbg->log("*** Hash ***");
+$dbg->log("UserPassword = " . $user_password);
 
 $_SESSION['decryptPass'] = $decryptPass;
 $_SESSION['userName'] = $user_name;
@@ -108,7 +108,7 @@ if ($Server == "")
 {
   session_unset();
   session_destroy();
-  $dbg->print("Wrong decrypt key. Access denied!");
+  $dbg->log("Wrong decrypt key. Access denied!");
   $dbg->close();
   die('{
       "error"  : "Wrong decrypt key. Access denied!",
@@ -144,7 +144,7 @@ $answer = '{' .
 }'; 
 echo($answer);
 
-$dbg->print("Answer = " . $answer);
+$dbg->log("Answer = " . $answer);
 $dbg->close();
 
 ?>

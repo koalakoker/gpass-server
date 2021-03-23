@@ -28,27 +28,27 @@ class InviteUser
   public function __construct() {}
 
   private function getSessionParameters() {
-    $this->dbg->print("Get session parameters");
+    $this->dbg->log("Get session parameters");
 
     if (($this->decryptPass = getDecryptPass()) == "") {
-      $this->dbg->print("Missing decrypt key!");
+      $this->dbg->log("Missing decrypt key!");
       $this->answer(false);
     }
 
     if (($this->userid = getUserId()) == NULL) {
-      $this->dbg->print("User id required!");
+      $this->dbg->log("User id required!");
       $this->answer(false);
     }
 
     $this->level = getLevel();
 
-    $this->dbg->print("Master password = " . $this->decryptPass);
-    $this->dbg->print("User Id = " . $this->userid);
-    $this->dbg->print("Level = " . $this->level);
+    $this->dbg->log("Master password = " . $this->decryptPass);
+    $this->dbg->log("User Id = " . $this->userid);
+    $this->dbg->log("Level = " . $this->level);
   }
 
   private function checkAdminRights() {
-    $this->dbg->print("Check admin right");
+    $this->dbg->log("Check admin right");
     $opetation = new Operation($this->dbg);
     $opetation->operation = "EMAIL";
     $opetation->level = $this->level;
@@ -58,18 +58,18 @@ class InviteUser
   }
 
   private function getParametersFromURLWithoutEncription() {
-    $this->dbg->print("Get parameters from URL without encription");
+    $this->dbg->log("Get parameters from URL without encription");
     if (!isset($_GET['invitedUserId'])) {
-      $this->dbg->print("Missing invited user id!");
+      $this->dbg->log("Missing invited user id!");
       $this->answer(false);
     }
 
     $this->invitedUserId = $_GET['invitedUserId'];
-    $this->dbg->print("Invited user Id:" . $this->invitedUserId);
+    $this->dbg->log("Invited user Id:" . $this->invitedUserId);
   }
 
   private function getInvitedUserDataFromDB() {
-    $this->dbg->print("Access db to get info about invited user");
+    $this->dbg->log("Access db to get info about invited user");
 
     $dataBaseAccess = DataBaseAccess::getInstance();
 
@@ -87,7 +87,7 @@ class InviteUser
     if ($Server == "") {
       session_unset();
       session_destroy();
-      $this->dbg->print("Wrong decrypt key. Access denied!");
+      $this->dbg->log("Wrong decrypt key. Access denied!");
       $this->answer(false);
     }
 
@@ -105,7 +105,7 @@ class InviteUser
     if (!$result) {
       session_unset();
       session_destroy();
-      $this->dbg->print("MySQL error");
+      $this->dbg->log("MySQL error");
       $this->answer(false);
     }
 
@@ -114,28 +114,28 @@ class InviteUser
     if ($userInfo == null) {
       session_unset();
       session_destroy();
-      $this->dbg->print("User info is null");
+      $this->dbg->log("User info is null");
       $this->answer(false);
     }
 
     $this->user_name = $userInfo->username;
     $this->email =  $userInfo->email;
 
-    $this->dbg->print("*** From DB ***");
-    $this->dbg->print("UserName = "     . $this->user_name);
-    $this->dbg->print("Email = " . $this->email);
+    $this->dbg->log("*** From DB ***");
+    $this->dbg->log("UserName = "     . $this->user_name);
+    $this->dbg->log("Email = " . $this->email);
 
   }
 
   private function getEncryptedParameters() {
-    $this->dbg->print("Get info from url params and decode them");
+    $this->dbg->log("Get info from url params and decode them");
 
     $user_password = $_GET['user_password'];
     $return_url = $_GET["return_url"];
 
-    $this->dbg->print("*** Received ***");
-    $this->dbg->print("UserPassword = " . $user_password);
-    $this->dbg->print("ReturnUrl = " . $return_url);
+    $this->dbg->log("*** Received ***");
+    $this->dbg->log("UserPassword = " . $user_password);
+    $this->dbg->log("ReturnUrl = " . $return_url);
 
     $inputList = array(
       'user_password' => $user_password,
@@ -143,16 +143,16 @@ class InviteUser
     );
     $outputList = passDecrypt($inputList, true);
 
-    $this->dbg->print("*** Decoded ***");
-    $this->dbg->print("UserPassword = " . $outputList['user_password']);
-    $this->dbg->print("ReturnUrl = " . $outputList['return_url']);
+    $this->dbg->log("*** Decoded ***");
+    $this->dbg->log("UserPassword = " . $outputList['user_password']);
+    $this->dbg->log("ReturnUrl = " . $outputList['return_url']);
 
     $this->user_password = $outputList['user_password'];
     $this->return_url = $outputList['return_url'];
   }
 
   private function sendEmail() {
-    $this->dbg->print("Send email");
+    $this->dbg->log("Send email");
 
     $userEmail = $this->email;
     $userName = $this->user_name;
@@ -172,7 +172,7 @@ class InviteUser
     }
     echo ($answer);
 
-    $this->dbg->print("Answer = " . $answer);
+    $this->dbg->log("Answer = " . $answer);
     $this->dbg->close();
     die();
   }
