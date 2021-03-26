@@ -39,19 +39,19 @@ if (!isset($_GET["user_name"]))
 }');
 }
 
-if (!isset($_GET["user_password"]))
+if (!isset($_GET["user_hash"]))
 {
-  $dbg->log("Missing user_password!");
+  $dbg->log("Missing user_hash!");
   $dbg->close();
   die('{
-    "error": "Missing user_password!",
+    "error": "Missing user_hash!",
     "logged"      : false
 }');
 }
 
 $chipher_password = $_GET["chipher_password"];
 $user_name = $_GET['user_name'];
-$user_password = $_GET['user_password'];
+$user_hash = $_GET['user_hash'];
 
 if (isset($_SESSION['decryptPass'])) {
   $prevSession = '"prevSession" : "' . $_SESSION["decryptPass"] . '",';
@@ -67,37 +67,33 @@ else {
   $prevSessionUserName ='';
 }
 
-if (isset($_SESSION['userPass'])) {
-  $prevSessionUserPass = '"prevSessionUserPass" : "' . $_SESSION["userPass"] . '",';
+if (isset($_SESSION['userHash'])) {
+  $prevSessionUserHash = '"prevSessionUserHash" : "' . $_SESSION["userHash"] . '",';
 }
 else {
-  $prevSessionUserPass ='';
+  $prevSessionUserHash ='';
 }
 
 $dbg->log("*** Received ***");
-$dbg->log("UserName = "     . $user_name);
-$dbg->log("UserPassword = " . $user_password);
+$dbg->log("UserName = " . $user_name);
+$dbg->log("UserHash = " . $user_hash);
 
-$inputList = array('chipher_password' => $chipher_password,'user_name' => $user_name,'user_password' => $user_password );
+$inputList = array('chipher_password' => $chipher_password,'user_name' => $user_name,'user_hash' => $user_hash);
 $outputList = passDecrypt($inputList, false);
 
 $decryptPass = $outputList['chipher_password'];
 $user_name = $outputList['user_name'];
-$user_password = $outputList['user_password'];
+$user_hash = $outputList['user_hash'];
 
 $dbg->log("*** Decoded ***");
-$dbg->log("UserName = "     . $user_name);
-$dbg->log("UserPassword = " . $user_password);
+$dbg->log("UserName = " . $user_name);
+$dbg->log("UserHash = " . $user_hash);
 
 $decryptPass = hashPass($decryptPass);
-$user_password = hashPass($user_password);
-
-$dbg->log("*** Hash ***");
-$dbg->log("UserPassword = " . $user_password);
 
 $_SESSION['decryptPass'] = $decryptPass;
 $_SESSION['userName'] = $user_name;
-$_SESSION['userPass'] = $user_password;
+$_SESSION['userHash'] = $user_hash;
 
 $Server   = deChipher($Server,  $decryptPass);
 $Username = deChipher($Username,$decryptPass);
@@ -127,6 +123,19 @@ $sql = "SELECT * FROM `users` WHERE `username`='" . $user_name ."'";
 $result = mysqli_query($link,$sql);
 
 $obj = mysqli_fetch_object($result);
+
+// Check user hash
+if ($user_hash != $obj->userhash) {
+  session_unset();
+  session_destroy();
+  $dbg->log("Wrong password. Access denied!");
+  $dbg->close();
+  die('{
+      "error"  : "Wrong password. Access denied!",
+      "logged" : false
+    }');
+}
+
 $_SESSION['userid'] = $obj->id;
 $_SESSION['level'] = $obj->level;
 

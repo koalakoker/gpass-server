@@ -3,20 +3,24 @@
 class Operation
 {
   public $operation; // "GET", "POST", "DELETE", "PUT"
+  public $operationOnId;
   public $table;
   public $input;
-  public $userid;
-  public $allUsers;
-  public $level;
+  public $sessionUserid;
+  public $sessionLevel;
   private $dbg;
   private $minLevel;
+
+  private $userLevel = 0;
+  private $adminLevel = 1;
+  private $forbiddenLevel = 2;
   
   public function __construct($dbg){
     $this->dbg = $dbg;
     $this->operation = "";
     $this->table = "";
-    $this->level = 0;
-    $this->minLevel = 1;
+    $this->sessionLevel = $this->userLevel;
+    $this->minLevel = $this->userLevel;
   }
 
   private function checkTableUsersAccess() {
@@ -26,33 +30,53 @@ class Operation
         ($this->operation == "POST") ||
         ($this->operation == "DELETE")
       ) {
-        $this->minLevel = 1;
+        $this->minLevel = $this->adminLevel;
       }
 
       if ($this->operation == "PUT") {
-        // Change the level to admin requires admin right
-        $this->minLevel = $this->input["level"];
+        if (isset($this->input["level"])) {
+          // Change the level requires same right
+          $this->minLevel = $this->input["level"];
+          $this->dbg->log("  Change level");
+        }
+        if ($this->operationOnId != $this->sessionUserid) {
+          // Operation on different user id requires admin
+          $this->minLevel = $this->adminLevel;
+          $this->dbg->log("  Operation on different id");
+          $this->dbg->log("  onID:" . $this->operationOnId . 
+                          "  sesId:" . $this->sessionUserid);
+        }
+        if (isset($this->input["id"])) {
+          if ($this->operationOnId != $this->input["id"]) {
+            // Operation on different user id is forbidden
+            $this->minLevel = $this->forbiddenLevel;
+          }
+        }
+        if (isset($this->input["username"])) {
+          // Protect parameters that can't be modified
+          $this->minLevel = $this->forbiddenLevel;
+        }
       }
     }
   }
 
   private function checkInviteUserForOperation() {
     if ($this->operation == "EMAIL") {
-      $this->minLevel = 1;
+      $this->minLevel = $this->adminLevel;
     }
   }
   
   public function checkAdminRightForOperation() {
     $this->dbg->log("  Check operation");
     
-    $this->minLevel = 0;
+    $this->minLevel = $this->userLevel;
     $this->checkTableUsersAccess();
     $this->checkInviteUserForOperation();
     
-    $this->dbg->log("  User level:"   . $this->level);
+    $this->dbg->log("  User level:"   . $this->sessionLevel);
     $this->dbg->log("  Rights level:" . $this->minLevel);
 
-    if ($this->level >= $this->minLevel) 
+    if ($this->sessionLevel >= $this->minLevel) 
     {
       $this->dbg->log("  User has rights for the operation");
       return true;

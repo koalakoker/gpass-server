@@ -27,6 +27,7 @@ if (($decryptPass = getDecryptPass()) == "") {
   noAnswer($dbg);
 };
 
+$sessionUserId = getUserId();
 $level = getLevel();
 $allUsers = -1;
 
@@ -51,6 +52,10 @@ if ($Server == "")
   $dbg->log("Wrong decrypt key. Access denied!");
   noAnswer($dbg);
 }
+
+$dbg->log($_SERVER['REQUEST_METHOD']);
+$dbg->log($_SERVER['PATH_INFO']);
+$dbg->log(file_get_contents('php://input'));
 
 // get the HTTP method, path and body of the request
 $method = $_SERVER['REQUEST_METHOD'];
@@ -84,11 +89,11 @@ if ($input)
 
 $operation = new Operation($dbg);
 $operation->operation = $method;
+$operation->operationOnId = $key;
 $operation->table = $table;
 $operation->input = $input;
-$operation->userid = $userid;
-$operation->allusers = $allusers;
-$operation->level = $level;
+$operation->sessionUserid = $sessionUserId;
+$operation->sessionLevel = $level;
 
 if (!$operation->checkAdminRightForOperation()) { 
   noAnswer($dbg);

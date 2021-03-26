@@ -3,17 +3,17 @@
 // Enable log files if true
 function isLogEnabled()
 {
-  return false;
+  return true;
 }
 
 // False to use session, True to get params from url 
 function isConfigForTesting() {
-  return false;
+  return true;
 }
 
 // Skip the time token cript if true
 function isLocal() {
-  return false;
+  return true;
 }
 
 ?>
