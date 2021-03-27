@@ -23,6 +23,12 @@ class Operation
     $this->minLevel = $this->userLevel;
   }
 
+  private function increaseRightLevelTo($newMinLevel) {
+    if ($newMinLevel > $this->minLevel) {
+      $this->minLevel = $newMinLevel;
+    }
+  }
+
   private function checkTableUsersAccess() {
     if ($this->table == "users") {
       // Get full list ?, addnew and delete requires admin
@@ -30,31 +36,31 @@ class Operation
         ($this->operation == "POST") ||
         ($this->operation == "DELETE")
       ) {
-        $this->minLevel = $this->adminLevel;
+        $this->increaseRightLevelTo($this->adminLevel);
       }
 
       if ($this->operation == "PUT") {
         if (isset($this->input["level"])) {
           // Change the level requires same right
-          $this->minLevel = $this->input["level"];
+          $this->increaseRightLevelTo($this->input["level"]);
           $this->dbg->log("  Change level");
         }
         if ($this->operationOnId != $this->sessionUserid) {
           // Operation on different user id requires admin
-          $this->minLevel = $this->adminLevel;
-          $this->dbg->log("  Operation on different id");
-          $this->dbg->log("  onID:" . $this->operationOnId . 
-                          "  sesId:" . $this->sessionUserid);
+          $this->increaseRightLevelTo($this->adminLevel);
+          $this->dbg->log("  Operation on id that is not session id");
         }
         if (isset($this->input["id"])) {
           if ($this->operationOnId != $this->input["id"]) {
             // Operation on different user id is forbidden
-            $this->minLevel = $this->forbiddenLevel;
+            $this->increaseRightLevelTo($this->forbiddenLevel);
+            $this->dbg->log("  Operation on different id");
           }
         }
         if (isset($this->input["username"])) {
           // Protect parameters that can't be modified
-          $this->minLevel = $this->forbiddenLevel;
+          $this->increaseRightLevelTo($this->forbiddenLevel);
+          $this->dbg->log("  Change user name is forbidden!");
         }
       }
     }
