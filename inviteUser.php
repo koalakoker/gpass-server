@@ -30,6 +30,8 @@ class InviteUser
   private function getSessionParameters() {
     $this->dbg->log("Get session parameters");
 
+    session_start();
+
     if (($this->decryptPass = getDecryptPass()) == "") {
       $this->dbg->log("Missing decrypt key!");
       $this->answer(false);
@@ -51,7 +53,7 @@ class InviteUser
     $this->dbg->log("Check admin right");
     $opetation = new Operation($this->dbg);
     $opetation->operation = "EMAIL";
-    $opetation->level = $this->level;
+    $opetation->sessionLevel = $this->level;
     if (!$opetation->checkAdminRightForOperation()) {
       $this->answer(false);
     };
