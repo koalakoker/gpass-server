@@ -1,7 +1,7 @@
 <?php
 include_once "printable.php";
 
-function sendEmail($userEmail, $user_name, $userPassword, $masterPassword, $returnUrl) {
+function sendEmail($userEmail, $user_name, $userHash, $masterPassword, $returnUrl) {
   $emailPrint = new Printable("../log/email.html", "w");
   
   $subject = 'Invitation to GPass service';
@@ -18,7 +18,7 @@ function sendEmail($userEmail, $user_name, $userPassword, $masterPassword, $retu
     <p>&nbsp;</p>
     <p>Dear <span style="color: #800000;">' . $user_name . '</span> &lt;' . $userEmail . '&gt;</p>
     <p>GPass admins invite you to join to the service. Click the following link you will admit to use GPass.</p>
-    <p style="text-align: center;"><a href="' . $returnUrl . '/' . $user_name . '/' . $userPassword . '/' . $masterPassword . '">Click on this link</a></p>
+    <p style="text-align: center;"><a href="' . $returnUrl . '/' . rawurlencode($user_name) . '/' . rawurlencode($userHash) . '/' . rawurlencode($masterPassword) . '">Click on this link</a></p>
     <p>Note that this link will expire in 30 days.</p>
   </body>
 </html> 

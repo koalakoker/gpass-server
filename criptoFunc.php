@@ -68,4 +68,31 @@ function passDecrypt($list, $oneMonth)
     
     return $returnList;
 }
+
+function passCrypt($list, $oneMonth)
+{
+    if (isLocal()) {
+        $dateStr = "14 12 1972";
+    } else {
+        $json = json_decode(file_get_contents('https://worldtimeapi.org/api/timezone/Europe/Rome'));
+        if ($oneMonth) {
+            $lastCharIndex = 7;
+        } else {
+            $lastCharIndex = 16;
+        }
+        $dateStr = substr($json->{'datetime'}, 0, $lastCharIndex);
+    }
+
+    $secret = 'f775aaf9cfab2cd30fd0d0ad28c5c460';
+    $hmac = hash_hmac('sha256', $dateStr, $secret);
+
+    $returnList = $list;
+
+    foreach ($list as $key => $encrypted) {
+        $decript = chipher($encrypted, hexToStr($hmac));
+        $returnList[$key] = $decript;
+    }
+
+    return $returnList;
+}
 ?>

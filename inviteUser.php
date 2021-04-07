@@ -22,7 +22,7 @@ class InviteUser
   private $user_name;
   private $email;
 
-  private $user_password;
+  private $user_hash;
   private $return_url;
 
   public function __construct() {}
@@ -127,29 +127,40 @@ class InviteUser
     $this->dbg->log("UserName = "     . $this->user_name);
     $this->dbg->log("Email = " . $this->email);
 
+    $this->dbg->log("Crypt user name and master password");
+    
+    $planeList = array(
+      'username'       => $this->user_name,
+      'masterpassword' => $this->decryptPass
+    );
+    $cryptList = passCrypt($planeList, true);
+    $this->user_name   = $cryptList['username'];
+    $this->decryptPass = $cryptList['masterpassword'];
+
+    $this->dbg->log("*** Crypted ***");
+    $this->dbg->log("UserName = " . $this->user_name);
+
   }
 
   private function getEncryptedParameters() {
-    $this->dbg->log("Get info from url params and decode them");
+    $this->dbg->log("Get info from url params and decode if necessary");
 
-    $user_password = $_GET['user_password'];
+    $user_hash = $_GET['userhash'];
     $return_url = $_GET["return_url"];
 
     $this->dbg->log("*** Received ***");
-    $this->dbg->log("UserPassword = " . $user_password);
+    $this->dbg->log("UserHash = " . $user_hash);
     $this->dbg->log("ReturnUrl = " . $return_url);
 
     $inputList = array(
-      'user_password' => $user_password,
       'return_url' => $return_url
     );
     $outputList = passDecrypt($inputList, true);
 
     $this->dbg->log("*** Decoded ***");
-    $this->dbg->log("UserPassword = " . $outputList['user_password']);
     $this->dbg->log("ReturnUrl = " . $outputList['return_url']);
 
-    $this->user_password = $outputList['user_password'];
+    $this->user_hash = $user_hash;
     $this->return_url = $outputList['return_url'];
   }
 
@@ -158,11 +169,11 @@ class InviteUser
 
     $userEmail = $this->email;
     $userName = $this->user_name;
-    $userPassword = $this->user_password;
+    $userHash = $this->user_hash;
     $masterPassword = $this->decryptPass;
     $returnUrl = $this->return_url;
 
-    sendEmail($userEmail, $userName, $userPassword, $masterPassword, $returnUrl);
+    sendEmail($userEmail, $userName, $userHash, $masterPassword, $returnUrl);
   }
 
   private function answer($done)

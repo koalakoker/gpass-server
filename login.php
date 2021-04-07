@@ -8,6 +8,12 @@ header("Content-Type: application/json; charset=UTF-8");
 
 session_start();
 
+$errorCodeMissingParams     = "1";
+$errorCodeWrongMasterKey    = "2";
+$errorCodeWrongUsername     = "3";
+$errorCodeWrongUserPassword = "4";
+$errorCodeSessionDestroyed  = "5";
+
 $dbg = new DebugLog("../log/login.txt", "a");
 
 if (isset($_GET["logout"]))
@@ -16,42 +22,52 @@ if (isset($_GET["logout"]))
   session_destroy();
   $dbg->log("Session destroyed");
   $dbg->close();
-  die ('{ "error": "Session destroyed"}');
+  die ('{ "error": "Session destroyed",
+          "errorCode": ' . $errorCodeSessionDestroyed  . ' }');
 }
 
-if (!isset($_GET["chipher_password"]))
-{
+$chipher_hash = "";
+if (isset($_GET["chipher_hash"])) {
+  $chipher_hash = $_GET["chipher_hash"];
+}
+$chipher_password = "";
+ if (isset($_GET["chipher_password"])) {
+  $chipher_password = $_GET["chipher_password"];
+}
+
+if (($chipher_password == "") && ($chipher_hash == "")) {
   $dbg->log("Missing chipher_password!");
   $dbg->close();
   die('{
     "error": "Missing chipher_password!",
+    "errorCode" : ' . $errorCodeMissingParams . ',
     "logged"      : false
-}');
+  }');
 }
 
-if (!isset($_GET["user_name"]))
-{
+if (isset($_GET["user_name"])) {
+  $user_name = $_GET['user_name'];
+} else {
   $dbg->log("Missing user_name!");
   $dbg->close();
   die('{
     "error": "Missing user_name!",
+    "errorCode" : ' . $errorCodeMissingParams . ',
     "logged"      : false
 }');
 }
 
-if (!isset($_GET["user_hash"]))
-{
+if (isset($_GET["user_hash"])) {
+  $user_hash = $_GET['user_hash'];
+} else {
   $dbg->log("Missing user_hash!");
   $dbg->close();
   die('{
     "error": "Missing user_hash!",
+    "errorCode" : ' . $errorCodeMissingParams . ',
     "logged"      : false
 }');
 }
-
-$chipher_password = $_GET["chipher_password"];
-$user_name = $_GET['user_name'];
-$user_hash = $_GET['user_hash'];
 
 if (isset($_SESSION['decryptPass'])) {
   $prevSession = '"prevSession" : "' . $_SESSION["decryptPass"] . '",';
@@ -75,25 +91,41 @@ else {
 }
 
 $dbg->log("*** Received ***");
-$dbg->log("UserName = " . $user_name);
-$dbg->log("UserHash = " . $user_hash);
+$dbg->log("UserName = "         . $user_name);
+$dbg->log("UserHash = "         . $user_hash);
+$dbg->log("chipher_password = " . $chipher_password);
+$dbg->log("chipher_hash = "     . $chipher_hash);
 
-$inputList = array('chipher_password' => $chipher_password,'user_name' => $user_name,'user_hash' => $user_hash);
+$inputList = array(
+  'chipher_password' => $chipher_password,
+  'chipher_hash'     => $chipher_hash,
+  'user_name'        => $user_name,
+  'user_hash'        => $user_hash);
 $outputList = passDecrypt($inputList, false);
 
-$decryptPass = $outputList['chipher_password'];
-$user_name = $outputList['user_name'];
-$user_hash = $outputList['user_hash'];
+$chipher_password = $outputList['chipher_password'];
+$chipher_hash = $outputList['chipher_hash'];
+$user_name   = $outputList['user_name'];
+$user_hash   = $outputList['user_hash'];
 
 $dbg->log("*** Decoded ***");
-$dbg->log("UserName = " . $user_name);
-$dbg->log("UserHash = " . $user_hash);
+$dbg->log("chipher_password = " . $chipher_password);
+$dbg->log("chipher_hash = "     . $chipher_hash);
+$dbg->log("user_name = "        . $user_name);
+$dbg->log("user_hash = "        . $user_hash);
 
-$decryptPass = hashPass($decryptPass);
+if ($chipher_password != '') {
+  $decryptPass = hashPass($chipher_password);
+} else {
+  $decryptPass = $chipher_hash;
+}
 
 $_SESSION['decryptPass'] = $decryptPass;
 $_SESSION['userName'] = $user_name;
 $_SESSION['userHash'] = $user_hash;
+
+$dbg->log("*** Master Pass ***");
+$dbg->log($decryptPass);
 
 $Server   = deChipher($Server,  $decryptPass);
 $Username = deChipher($Username,$decryptPass);
@@ -108,6 +140,7 @@ if ($Server == "")
   $dbg->close();
   die('{
       "error"  : "Wrong decrypt key. Access denied!",
+      "errorCode" : ' . $errorCodeWrongMasterKey . ' ,
       "logged" : false
     }');
 }
@@ -124,6 +157,18 @@ $result = mysqli_query($link,$sql);
 
 $obj = mysqli_fetch_object($result);
 
+if ($obj == null) {
+  session_unset();
+  session_destroy();
+  $dbg->log("Username not present in database");
+  $dbg->close();
+  die('{
+      "error"  : "Username not present in database",
+      "errorCode" : ' . $errorCodeWrongUsername . ',
+      "logged" : false
+    }');
+}
+
 // Check user hash
 if ($user_hash != $obj->userhash) {
   session_unset();
@@ -132,6 +177,7 @@ if ($user_hash != $obj->userhash) {
   $dbg->close();
   die('{
       "error"  : "Wrong password. Access denied!",
+      "errorCode" : ' . $errorCodeWrongUserPassword . ',
       "logged" : false
     }');
 }
