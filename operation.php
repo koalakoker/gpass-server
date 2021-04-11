@@ -32,11 +32,18 @@ class Operation
   private function checkTableUsersAccess() {
     if ($this->table == "users") {
       // Get full list ?, addnew and delete requires admin
-      if (($this->operation == "GET")  ||
-        ($this->operation == "POST") ||
+      if (($this->operation == "POST") ||
         ($this->operation == "DELETE")
       ) {
         $this->increaseRightLevelTo($this->adminLevel);
+      }
+
+      if ($this->operation == "GET") {
+        if ($this->operationOnId != $this->sessionUserid) {
+          // Operation on different user id requires admin
+          $this->increaseRightLevelTo($this->adminLevel);
+          $this->dbg->log("  Operation on id that is not session id");
+        }
       }
 
       if ($this->operation == "PUT") {
