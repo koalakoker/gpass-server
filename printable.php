@@ -10,8 +10,12 @@ class Printable
     if (isLogEnabled()) {
       $this->logFile = fopen($fileName, $accessMode);
     } else {
-      $this->logFile = null;
+      $this->mute();
     }
+  }
+
+  public function mute() {
+    $this->logFile = null;
   }
 
   public function log($message) {

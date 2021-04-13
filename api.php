@@ -67,8 +67,14 @@ class Api
     
     session_start();
     
-    $this->dbg = new DebugLog("../log/api.txt", "a");
+    if ($_SERVER['REQUEST_METHOD'] == "OPTIONS") {
+      $silent = true;
+    } else {
+      $silent = false;
+    }
     
+    $this->dbg = new DebugLog("../log/api.txt", "a", $silent);
+
     if (($decryptPass = getDecryptPass()) == "") {
       $this->dbg->log("Missing decrypt key!");
       $this->failAnswer();

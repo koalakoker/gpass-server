@@ -191,7 +191,13 @@ class InviteUser
   }
 
   public function execute() {
-    $this->dbg = new DebugLog("../log/email.txt", "a");
+    if ($_SERVER['REQUEST_METHOD'] == "OPTIONS") {
+      $silent = true;
+    } else {
+      $silent = false;
+    }
+
+    $this->dbg = new DebugLog("../log/email.txt", "a", $silent);
 
     $this->getSessionParameters();
     $this->checkAdminRights();

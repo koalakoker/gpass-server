@@ -14,7 +14,13 @@ $errorCodeWrongUsername     = "3";
 $errorCodeWrongUserPassword = "4";
 $errorCodeSessionDestroyed  = "5";
 
-$dbg = new DebugLog("../log/login.txt", "a");
+if ($_SERVER['REQUEST_METHOD'] == "OPTIONS") {
+  $silent = true;
+} else {
+  $silent = false;
+}
+
+$dbg = new DebugLog("../log/login.txt", "a", $silent);
 
 if (isset($_GET["logout"]))
 {
