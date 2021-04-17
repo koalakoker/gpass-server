@@ -129,7 +129,13 @@ class Api
     
     // retrieve the table and key from the path
     $table = preg_replace('/[^a-z0-9_]+/i','',array_shift($request));
-    $this->key = array_shift($request)+0;
+    
+    if (count($request) > 0) {
+      $this->keyExist = true;
+      $this->key = array_shift($request) + 0;
+    } else {
+      $this->keyExist = false;
+    }
     
     // build the SET part of the SQL command
     $set = '';
@@ -165,9 +171,9 @@ class Api
     switch ($this->method) {
       case 'GET':
         if ($userid==$allUsers) {
-          $sql = "select * from `$table`".( $this->key ? " WHERE id=$this->key" : '');
+          $sql = "select * from `$table`".( $this->keyExist ? " WHERE id=$this->key" : '');
         } else {
-          $sql = "select * from `$table` WHERE userid=" . $userid . ( $this->key ? " AND id=$this->key" : '');
+          $sql = "select * from `$table` WHERE userid=" . $userid . ( $this->keyExist ? " AND id=$this->key" : '');
         }
       break;
       case 'PUT':
